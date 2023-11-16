@@ -98,18 +98,6 @@ set.mem.prior <- function(num_study, delta){
 }
   
 
-
-postEN.map <- function(n_c, map_rob){
-  #enumerate possible outcomes for current data
-  cdat <- expand.grid(0:n_c, n_c)
-  names(cdat) <- c("x", "n")
-  EN <- foreach(k = 1:nrow(cdat),.combine="c")%do%{
-    map_post <- postmix(map_rob, n = n_c, r =cdat$x[k])
-    ess(map_post)
-  }
-  EN
-}
-
 maxEN <- function(n_c, hdat, prior){
   H <- nrow(hdat)
   fit0 <- set.mem.prior(num_study = H+1, delta = prior)
