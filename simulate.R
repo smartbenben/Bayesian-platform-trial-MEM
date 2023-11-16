@@ -4,7 +4,6 @@ library(RBesT)
 require(randomizr)
 require(extraDistr)
 
-setwd("C:\\Users\\willi\\OneDrive - Yale University\\Desktop\\research\\hybrid platform design\\resubmission\\code")
 source("mem functions.R")
 
 # sd of historical controls
