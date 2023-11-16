@@ -1,0 +1,96 @@
+---
+title: "demo"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r include=FALSE}
+rm(list=ls(all=TRUE))
+library(foreach)
+library(kableExtra)
+
+setwd("C:\\Users\\willi\\OneDrive - Yale University\\Desktop\\research\\hybrid platform design\\resubmission\\code")
+
+source("mem functions.R")
+```
+
+#### Historical data
+Assume there are three historical controls. Each has a sample size of 120, with a observed
+probability of response of 0.19, 0.09 and 0.11, respectively. 
+```{r, echo=FALSE}
+his_trial <- data.frame(trial = 1:3, x = c(23, 11, 13), n = c(120, 120, 120),
+                        y = c(97, 109, 107))
+
+kable(his_trial) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F)
+```
+
+#### Historical response rate
+```{r, echo=FALSE}
+his_trial$x/his_trial$n
+```
+
+#### Calibrate MEM to meet the upper limit of borrowing 
+Assume the internal control (IC) has a sample size of 30 and the maximum amount of
+borrowing allowed from the historical controls is 30. 
+```{r, echo=FALSE}
+## sample size of the internal control
+n0 <- 30
+## we plan to borrow at most 30 patients
+n0_star <- 30
+## set the target sample size
+target_N <- n0+n0_star
+
+mem_prior <- find.mem.prior(n_c = n0, hdat = his_trial, target_N = target_N )
+
+H <- nrow(his_trial)
+fit0 <- set.mem.prior(num_study = H+1, delta = mem_prior)
+
+tab1 <- cbind(fit0$part, fit0$prior)
+colnames(tab1) <- c("H1","H2", "H3", "IC", "Prior")
+kable(tab1) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F)
+```
+
+#### implement MEM
+Assume there are 1, 2, ... 16 responses out of the 30 patients in IC
+```{r, echo=FALSE}
+## number of responses out of n0 patients
+x0 <- seq(1, 16, 1)
+## initial prior for the response rate of internal control
+beta_a <- beta_b <- 1
+
+mem_out <- NULL
+
+for(i in 1:length(x0)){
+  fit <- update.part.bin(x = c(his_trial$x, x0[i]), 
+                         n = c(his_trial$n, n0), 
+                         prior_part = fit0$prior, 
+                         part = fit0$part)
+  rstar <- fit$post_sim
+  astar <- beta_a + sum(rstar*his_trial$x) + x0[i]
+  bstar <- beta_b + sum(rstar*his_trial$y) + n0-x0[i]
+  
+  est <- qbeta(c(0.025, 0.5, 0.975), astar, bstar)
+  ## effective sample size
+  en <- astar + bstar
+  
+  mem_out <- rbind(mem_out, c(x0[i], est, en))
+}
+colnames(mem_out) <- c("# responses", "MEM_2.5CI", "MEM_Median", "MEM_97.5CI", "MEM_ESS")
+```
+
+#### Analyze the same data using a uniform prior for the response rate of internal control
+```{r, echo=FALSE}
+uni_out <- NULL
+for(i in 1:length(x0)){
+  est <- qbeta(c(0.025, 0.5, 0.975), 1+x0[i], 1+n0-x0[i])
+  uni_out <- rbind(uni_out, est)
+}
+rownames(uni_out) <- NULL
+colnames(uni_out) <- c("UNI_2.5CI", "UNI_Median", "UNI_97.5CI")
+
+kable(round(cbind(mem_out, uni_out), 3)) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F)
+```
