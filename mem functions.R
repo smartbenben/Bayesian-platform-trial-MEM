@@ -49,34 +49,6 @@ update.part.bin <- function(x, n, prior_part, part, a0 = 1, b0 = 1){
               "post_sim" = post_sim))
 }
 
-update.part.bin2 <- function(x, n, prior_part, part, a0 = 1, b0 = 1){
-  R <- length(x)
-  K <- nrow(part)
-  
-  p <- foreach(k = 1:K,.combine = "c")%do%{
-    grp <- unlist(part[k, ])
-    S <- aggregate(x, by=list(grp), sum)$x
-    N <- aggregate(n, by=list(grp), sum)$x
-    #calculate marginal probs m(s_j)
-    prod(choose(N, S)*beta(a0+S, b0+N-S)/beta(a0,b0))*prior_part[k]
-  }
-  post_part <- p/sum(p)
-  
-  idx <- which.max(post_part)
-  
-  sim_mat <- part[, 1:(R-1)]==part[, R]
-  
-  if(is.null(nrow(sim_mat))){
-    post_sim <- sum(sim_mat*post_part)
-  }else{
-    post_sim <- colSums(sim_mat*post_part)
-  }
-  
-  return(list("part_hat" = part[idx, ], "phat" = post_part[idx], 
-              "post_part" = post_part,
-              "post_sim" = post_sim))
-}
-
 ## partitions of studies
 ## assume the last study is the current study
 set.mem.prior <- function(num_study, delta){
