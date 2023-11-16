@@ -2,8 +2,6 @@ rm(list=ls(all=TRUE))
 library(foreach)
 library(RBesT)
 
-setwd("C:\\Users\\willi\\OneDrive - Yale University\\Desktop\\research\\hybrid platform design\\resubmission\\code")
-
 source("mem functions.R")
 source("cal posterior.R")
 source("get.design.R")
