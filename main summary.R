@@ -1,8 +1,5 @@
 rm(list=ls(all=TRUE))
 
-setwd("C:\\Users\\willi\\OneDrive - Yale University\\Desktop\\research\\hybrid platform design\\resubmission\\code")
-
-
 load("analysis v=0.025.RData")
 
 ##----------------------------------------------------
