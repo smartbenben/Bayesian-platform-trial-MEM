@@ -1,5 +1,5 @@
 require("partitions")
-
+#enumerate all possible partitions of R studies
 # R: the number of trials to consider
 # max_cl: maximum number of blocks
 get.part <- function(R, max_cl){
@@ -14,9 +14,8 @@ get.part <- function(R, max_cl){
   return(part_mat)
 }
 
-#enumerate all possible partitions of studies
-#and calculate the uncertainties related to each partition
 
+#calculate the uncertainties related to each partition
 ##x: vector of responses in each study
 ##n: vector of sample sizes in each study
 ##beta prior for response rate: a0, b0 [default: a0 = b0 = 1]
@@ -48,8 +47,6 @@ update.part.bin <- function(x, n, prior_part, part, a0 = 1, b0 = 1){
               "post_sim" = post_sim))
 }
 
-## partitions of studies
-## assume the last study is the current study
 set.mem.prior <- function(num_study, delta){
   part <- get.part(R = num_study, max_cl = num_study)
   K <- nrow(part)
