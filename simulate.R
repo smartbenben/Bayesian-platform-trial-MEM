@@ -17,7 +17,7 @@ arm_size <- c(30, 60, 60)
 A <- length(arm_size)
 # total sample size
 N <- sum(arm_size)
-# response rate with the 1st element represent control
+# response rate with the 1st element represent control under H0 and H1
 arm_rate1 <- c(0.15, 0.30, 0.40)
 arm_rate0 <- c(0.15, 0.15, 0.15)
 arm_name <- c("Ctr", paste("T", 1:(A-1), sep=""))
@@ -25,7 +25,7 @@ arm_name <- c("Ctr", paste("T", 1:(A-1), sep=""))
 ##----------------------------------------------------
 ##  simulate internal data:
 ##----------------------------------------------------
-nsim <- 1000
+nsim <- 2000
 
 dat <- dat0 <- list()
 #mat <- matrix(NA, nrow = 3, ncol = nsim)
@@ -97,16 +97,8 @@ for(s in 1:S){
   map_mix[[s]] <- automixfit(map_mc, Nc = 2)
   map_rob[[s]] <- robustify(map_mix[[s]], weight = 0.5, mean = 1/2, n = 1)
   
-  #target_N <- arm_size[1] + min(arm_size[2] - arm_size[1], ess(map_mix[[s]]))
-  target_N <- arm_size[1] + min(arm_size[2] - arm_size[1], 30)
-  print(target_N)
-
   trial_H[[s]] <- htrial
 }
 
-mem_prior <- find.mem.prior(n_c = arm_size[1], hdat = trial_H[[which(rate_diff==0)]], 
-                               target_N = 60)
-
-maxEN(n_c = arm_size[1], hdat =trial_H[[3]], prior = mem_prior)
 save.image(paste("simulation v=", v_H, ".RData", sep =""))
 
