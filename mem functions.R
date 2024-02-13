@@ -18,6 +18,8 @@ get.part <- function(R, max_cl){
 #calculate the uncertainties related to each partition
 ##x: vector of responses in each study
 ##n: vector of sample sizes in each study
+## prior_part: the prior prob of different partitions
+## part: all the possible partitions of studies
 ##beta prior for response rate: a0, b0 [default: a0 = b0 = 1]
 update.part.bin <- function(x, n, prior_part, part, a0 = 1, b0 = 1){
   R <- length(x)
@@ -47,6 +49,7 @@ update.part.bin <- function(x, n, prior_part, part, a0 = 1, b0 = 1){
               "post_sim" = post_sim))
 }
 
+## generate the priors for different partitions
 set.mem.prior <- function(num_study, delta){
   part <- get.part(R = num_study, max_cl = num_study)
   K <- nrow(part)
@@ -65,7 +68,7 @@ set.mem.prior <- function(num_study, delta){
   list("part" = part, "prior" = prior, "prior_sim" = prior_sim)
 }
   
-
+## Calculate the maximum posterior ess
 maxEN <- function(n_c, hdat, prior){
   H <- nrow(hdat)
   fit0 <- set.mem.prior(num_study = H+1, delta = prior)
@@ -91,6 +94,7 @@ maxEN <- function(n_c, hdat, prior){
   max(out$N)
 }
 
+## find a suitable delta for MEM
 find.mem.prior <- function(n_c, hdat, target_N){
   f <- function(x){
     maxEN(n_c = n_c, hdat = hdat, prior = x) - target_N
