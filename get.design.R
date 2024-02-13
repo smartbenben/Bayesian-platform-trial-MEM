@@ -51,7 +51,7 @@ get.design <- function(a = seq(0.5, 1, 0.1),
     }
   }
   
-  fwer2 <- ifelse(fwer < target_fwer, fwer-target_fwer, 1000)
+  fwer2 <- ifelse(fwer <= target_fwer, fwer-target_fwer, 1000)
   idx <- which.min(abs(fwer2))
   
   if(length(t)>1){
