@@ -2,15 +2,17 @@ rm(list=ls(all=TRUE))
 
 load("analysis v=0.025.RData")
 
+source("get.design.R")
 ##----------------------------------------------------
-##  HY design:
+## Find the design parameters for different Hybrid design,
+## assuming internal data is consistant with external data (rate_diff=0)
 ##----------------------------------------------------
 opt_par <- NULL
 
 for(m in 1:4){
   design <- get.design(lam = seq(0.95, 0.99, 0.001), nsim = nsim, t = t_analysis, 
                        pp = pp0_list[[m]][which(rate_diff==0), , , ], 
-                       arm_size = arm_size, target_fwer = 0.051,
+                       arm_size = arm_size, target_fwer = 0.05,
                        n_ia = n_array[which(rate_diff==0), ,1:nsim, ])
   
   opt_par <- rbind(opt_par, design[1:5])
@@ -49,8 +51,6 @@ names(tab1) <- c("met", "p0", "fwp", "powA", "powB")
 ##----------------------------------------------------
 ##  power figs:
 ##----------------------------------------------------
-setEPS()
-postscript(paste("power curve_v=", v_H, ".eps", sep = ""), width = 10, height = 10)
 par(mfrow = c(1, 1), mar = c(5, 5, 1, 1), oma = c(1, 1, 1, 1))
 plot(0, 0, type = "n", xaxt = "n", yaxt = "n",  
      xlim = c(-0.1, 0.15), ylim = c(0, 1),
@@ -68,12 +68,10 @@ title(xlab="Difference from IC",
 legend(0.1, 0.5, bty = "n", pch = 21, col = c(1:4), 
        lty = c(1, 1, 1, 1), cex = 1.2, lwd = 3, 
        c("IC only", "HY-MAP", "HY-rMAP", "HY-MEM"))
-dev.off()
+
 ##----------------------------------------------------
 ##  EN figs:
 ##----------------------------------------------------
-setEPS()
-postscript(paste("en curve_v=", v_H, ".eps", sep = ""), width = 10, height = 6)
 par(mfrow = c(1, 2), mar = c(5, 5, 1, 1), oma = c(1, 1, 1, 1))
 plot(NA, NA, type = "n", xaxt = "n", yaxt = "n",  
      xlim = c(-0.1, 0.15), ylim = c(t_analysis[1], 180+5),
@@ -102,8 +100,8 @@ for(m in 1:4){
 }
 title(xlab="Difference from IC", 
       ylab="Expected sample size under H1", cex.lab = 1.5, line = 3.2)
-dev.off()
 
+## generate the table of fwer and fwp under h0 and h1
 ftab0 <- ftab1 <- NULL
 for(m in 1:4){
   ftab0 <- cbind(ftab0, tab0$fwp[tab0$met == m])
@@ -114,23 +112,3 @@ colnames(ftab) <- c(paste(rep(c("H0_", "H1_"), each = 4),
                           rep(c("IC", "MAP", "rMAP", "MEM"), 2), 
                           sep=""))
 rownames(ftab) <- rate_diff
-
-library(xtable)
-xtable(ftab, digits = 3)
-xtable(opt_par[, c(6, 1:3)], digits = 3)
-ftab
-
-names(tab0)[6] <- names(tab1)[6] <- "en"
-tab0[tab0$met==1, c(1,2, 4, 5)]
-
-tab <- data.frame(met = tab0$met, p=tab0$p0, 
-                  fw = paste(tab1$fwp,"(" ,tab0$fwp, ")", sep = ""), en = tab0$en)
-write.csv(tab, paste("tab_v=", v_H, ".csv", sep =""))
-
-
-tab3 <- read.csv("tab_v=0.csv")
-tab4 <- read.csv("tab_v=0.025.csv")
-
-tab5 <- cbind(tab3[tab3$p%in%c(-0.10, 0, 0.10), 2:4], tab4[tab4$p%in%c(-0.10, 0, 0.10), 4])
-xtable(tab5)
-
