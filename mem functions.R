@@ -14,13 +14,12 @@ get.part <- function(R, max_cl){
   return(part_mat)
 }
 
-#enumerate all possible partitions of baskets in a basket trial 
+#enumerate all possible partitions of studies
 #and calculate the uncertainties related to each partition
 
-##x: vector of responses in each basket
-##n: vector of sample sizes in each basket
+##x: vector of responses in each study
+##n: vector of sample sizes in each study
 ##beta prior for response rate: a0, b0 [default: a0 = b0 = 1]
-##max_cl: maximum number of clusters a basket trial should be partitioned to
 update.part.bin <- function(x, n, prior_part, part, a0 = 1, b0 = 1){
   R <- length(x)
   K <- nrow(part)
