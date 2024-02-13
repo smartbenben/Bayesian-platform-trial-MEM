@@ -4,10 +4,10 @@ library(RBesT)
 
 source("mem functions.R")
 source("cal posterior.R")
-source("get.design.R")
 
+## sd of historical controls, which is used for simulating HC data
 v_H <- 0.025
-
+## load simulated data
 load(paste("simulation v=", v_H, ".RData", sep =""))
 ##----------------------------------------------------
 ##  analysis:
@@ -15,11 +15,10 @@ load(paste("simulation v=", v_H, ".RData", sep =""))
 # time of interim analysis
 #t_analysis <- seq(90, sum(arm_size), 30)
 t_analysis <- c(90, sum(arm_size))
-##----------------------------------------------------
-##  run analysese through scenarios
-##----------------------------------------------------
 J <- length(t_analysis)
-
+##----------------------------------------------------
+##  run analyses through different simulation scenarios
+##----------------------------------------------------
 pp_fixed <- array(NA, dim = c(S, length(t_analysis), 2*nsim, A))
 pp_map <- array(NA, dim = c(S, length(t_analysis), 2*nsim, A))
 pp_rob <- array(NA, dim = c(S, length(t_analysis), 2*nsim, A))
@@ -27,15 +26,23 @@ pp_mem <- array(NA, dim = c(S, length(t_analysis), 2*nsim, A))
 
 n_array <- array(NA, dim = c(S, length(t_analysis), 2*nsim, A))
 
+## beta prior for the probability of response
 beta_a <- beta_b <- 1
 
 for(s in 1:S){
+  ## given the prespecified internal control sample size arm_size[1], 
+  ## historical control data under the s-th scenario trial_H[[s]],
+  ## and the maximum ESS of 60, determine the delta parameter
+  mem_prior <- find.mem.prior(n_c = arm_size[1], hdat = trial_H[[s]], 
+                              target_N = 60)
+  ## generate the prior for MEM configurations based on delta
   fit0 <- set.mem.prior(num_study = H+1, delta = mem_prior)
   
+  ## i is for the ith simulated trial
   for(i in 1:(2*nsim)){
     response <- D[[i]]$resp
     arm <- D[[i]]$arm_code
-    
+    ## loop through interim analysis
     for(j in 1:J){
       ##interim analysis data
       ia_dta <- response[1:t_analysis[j]]
@@ -48,17 +55,17 @@ for(s in 1:S){
       #save interim sample sizes for treatment arms
       n_array[s, j, i, ] <- nvec
       
+      ##MAP
       map_post <- data.frame(t(postmix(map_mix[[s]], n = nvec[1], r = xvec[1])[, ]))
       names(map_post) <- c("p", "alpha", "beta")
-      
+      ##rMAP
       rob_post <- data.frame(t(postmix(map_rob[[s]], n = nvec[1], r = xvec[1])[, ]))
       names(rob_post) <- c("p", "alpha", "beta")
-      
+      ##MEM
       fit <- update.part.bin(x = c(trial_H[[s]]$x, xvec[1]), 
                              n = c(trial_H[[s]]$n, nvec[1]), 
                              prior_part = fit0$prior, 
                              part = fit0$part)
-      #rstar <- ifelse(fit$part_hat[1,1:H]==fit$part_hat[1,1+H], 1, 0)*fit$phat
       
       rstar <- fit$post_sim
       astar <- beta_a + sum(rstar*trial_H[[s]]$x) + xvec[1]
@@ -91,10 +98,12 @@ for(s in 1:S){
 
 pp0_list <- list()
 pp1_list <- list()
+## posterior probabilities under H0
 pp0_list[[1]] <- pp_fixed[ , ,1:nsim, ]
 pp0_list[[2]] <- pp_map[ , ,1:nsim, ]
 pp0_list[[3]] <- pp_rob[ , ,1:nsim, ]
 pp0_list[[4]] <- pp_mem[ , ,1:nsim, ]
+## posterior probabilities under H1
 pp1_list[[1]] <- pp_fixed[ , ,(1+nsim):(2*nsim), ]
 pp1_list[[2]] <- pp_map[ , ,(1+nsim):(2*nsim), ]
 pp1_list[[3]] <- pp_rob[ , ,(1+nsim):(2*nsim), ]
